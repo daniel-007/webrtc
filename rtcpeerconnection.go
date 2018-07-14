@@ -123,6 +123,9 @@ func (r *RTCPeerConnection) CreateAnswer() error {
 		candidates = append(candidates, fmt.Sprintf("candidate:udpcandidate 1 udp %d %s %d typ host", basePriority, c, port.ListeningAddr.Port))
 		basePriority = basePriority + 1
 		r.ports = append(r.ports, port)
+
+		// TODO SCTP fails if we have more then 1 candidate
+		break
 	}
 	if r.config != nil {
 		for _, server := range r.config.ICEServers {
