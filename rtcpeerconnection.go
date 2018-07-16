@@ -64,7 +64,8 @@ func New(config *RTCConfiguration) (*RTCPeerConnection, error) {
 
 // RTCPeerConnection represents a WebRTC connection between itself and a remote peer
 type RTCPeerConnection struct {
-	Ontrack                    func(mediaType TrackType, buffers <-chan *rtp.Packet)
+	Ontrack                    func(TrackType, <-chan *rtp.Packet)
+	Ondatachannel              func(*RTCDataChannel)
 	LocalDescription           *sdp.SessionDescription
 	OnICEConnectionStateChange func(iceConnectionState ice.ConnectionState)
 
@@ -81,6 +82,8 @@ type RTCPeerConnection struct {
 	remoteDescription *sdp.SessionDescription
 
 	localTracks []*sdp.SessionBuilderTrack
+
+	dataChannels map[string]*RTCDataChannel
 }
 
 // Public
@@ -116,7 +119,14 @@ func (r *RTCPeerConnection) CreateAnswer() error {
 	candidates := []string{}
 	basePriority := uint16(rand.Uint32() & (1<<16 - 1))
 	for _, c := range ice.HostInterfaces() {
-		port, err := network.NewPort(c+":0", []byte(r.icePwd), r.tlscfg, r.generateChannel, r.iceStateChange)
+		port, err := network.NewPort(&network.PortArguments{
+			Address:   c + ":0",
+			RemoteKey: []byte(r.icePwd),
+			TLSCfg:    r.tlscfg,
+			BufferTransportGenerator: r.generateChannel,
+			ICENotifier:              r.iceStateChange,
+			DataChannelEventHandler:  r.dataChannelEventHandler,
+		})
 		if err != nil {
 			return err
 		}
@@ -168,7 +178,14 @@ func (r *RTCPeerConnection) CreateAnswer() error {
 					return errors.Wrapf(err, "Failed to unpack STUN XorAddress response")
 				}
 
-				port, err := network.NewPort(fmt.Sprintf("0.0.0.0:%d", localAddr.Port), []byte(r.icePwd), r.tlscfg, r.generateChannel, r.iceStateChange)
+				port, err := network.NewPort(&network.PortArguments{
+					Address:   fmt.Sprintf("0.0.0.0:%d", localAddr.Port),
+					RemoteKey: []byte(r.icePwd),
+					TLSCfg:    r.tlscfg,
+					BufferTransportGenerator: r.generateChannel,
+					ICENotifier:              r.iceStateChange,
+					DataChannelEventHandler:  r.dataChannelEventHandler,
+				})
 				if err != nil {
 					return errors.Wrapf(err, "Failed to build network/port")
 				}
@@ -250,7 +267,7 @@ func (r *RTCPeerConnection) Close() error {
 	return nil
 }
 
-// Private
+/* Everything below is private */
 func (r *RTCPeerConnection) generateChannel(ssrc uint32, payloadType uint8) (buffers chan<- *rtp.Packet) {
 	if r.Ontrack == nil {
 		return nil
@@ -282,7 +299,6 @@ func (r *RTCPeerConnection) generateChannel(ssrc uint32, payloadType uint8) (buf
 	return bufferTransport
 }
 
-// Private
 func (r *RTCPeerConnection) iceStateChange(p *network.Port) {
 	updateAndNotify := func(newState ice.ConnectionState) {
 		if r.OnICEConnectionStateChange != nil && r.iceState != newState {
@@ -310,4 +326,8 @@ func (r *RTCPeerConnection) iceStateChange(p *network.Port) {
 	} else {
 		updateAndNotify(ice.Connected)
 	}
+}
+
+func (r *RTCPeerConnection) dataChannelEventHandler(e *network.DataChannelEvent) {
+	fmt.Println("Event!")
 }
