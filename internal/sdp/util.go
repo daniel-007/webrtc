@@ -128,8 +128,25 @@ func GetCodecForPayloadType(payloadType uint8, sd *SessionDescription) (ok bool,
 			if strings.Contains(a, "rtpmap:"+strconv.Itoa(int(payloadType))) {
 				split := strings.Split(a, " ")
 				if len(split) == 2 {
-					split := strings.Split(split[1], "/")
-					return true, split[0]
+					split = strings.Split(split[1], "/")
+					codec.Name = split[0]
+					parts := len(split)
+					if parts > 1 {
+						rate, err := strconv.Atoi(split[1])
+						if err != nil {
+							return codec, err
+						}
+						codec.ClockRate = uint32(rate)
+					}
+					if parts > 2 {
+						codec.EncodingParameters = split[2]
+					}
+				}
+			} else if strings.HasPrefix(a, fmtpPrefix) {
+				// a=fmtp:<format> <format specific parameters>
+				split := strings.Split(a, " ")
+				if len(split) == 2 {
+					codec.Fmtp = split[1]
 				}
 			}
 		}

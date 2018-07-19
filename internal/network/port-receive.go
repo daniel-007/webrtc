@@ -109,13 +109,7 @@ func (p *Port) handleICE(in *incomingPacket, remoteKey []byte, iceTimer *time.Ti
 }
 
 func (p *Port) handleSCTP(raw []byte, a *sctp.Association) {
-	pkt := &sctp.Packet{}
-	if err := pkt.Unmarshal(raw); err != nil {
-		fmt.Println(errors.Wrap(err, "Failed to Unmarshal SCTP packet"))
-		return
-	}
-
-	if err := a.PushPacket(pkt); err != nil {
+	if err := a.Push(raw); err != nil {
 		fmt.Println(errors.Wrap(err, "Failed to push SCTP packet"))
 	}
 }
@@ -209,12 +203,7 @@ func (p *Port) networkLoop(remoteKey []byte, tlscfg *dtls.TLSCfg, b BufferTransp
 
 				d.DoHandshake()
 				p.dtlsStates[in.srcAddr.String()] = d
-				p.sctpAssocations[in.srcAddr.String()] = sctp.NewAssocation(func(pkt *sctp.Packet) {
-					raw, err := pkt.Marshal()
-					if err != nil {
-						fmt.Println(errors.Wrap(err, "Failed to Marshal SCTP packet"))
-						return
-					}
+				p.sctpAssocations[in.srcAddr.String()] = sctp.NewAssocation(func(raw []byte) {
 					d.Send(raw)
 				}, func(data []byte, streamIdentifier uint16) {
 					msg, err := datachannel.Parse(data)
