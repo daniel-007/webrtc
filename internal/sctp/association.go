@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 )
 
@@ -321,6 +322,7 @@ func (a *Association) send(p *packet) error {
 		return errors.Wrap(err, "Failed to send packet to outbound handler")
 	}
 
+	spew.Dump("OUT:", p)
 	a.outboundHandler(raw)
 
 	return nil
@@ -333,6 +335,7 @@ func (a *Association) handleChunk(p *packet, c chunk) error {
 		// TODO: Create ABORT
 	}
 
+	spew.Dump("IN:", c)
 	switch c := c.(type) {
 	case *chunkInit:
 		switch a.state {
@@ -377,6 +380,8 @@ func (a *Association) handleChunk(p *packet, c chunk) error {
 			}},
 		})
 	case *chunkCookieEcho:
+		fmt.Printf("Our Cookie: %v", a.myCookie.cookie)
+		fmt.Printf("Inc Cookie: %v", c.cookie)
 		if bytes.Equal(a.myCookie.cookie, c.cookie) {
 			return a.send(&packet{
 				verificationTag: a.peerVerificationTag,

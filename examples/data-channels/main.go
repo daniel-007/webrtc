@@ -1,21 +1,20 @@
 package main
 
 import (
-	"bufio"
 	"encoding/base64"
 	"fmt"
-	"os"
-
 	"github.com/pions/webrtc"
 	"github.com/pions/webrtc/pkg/ice"
 )
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-	rawSd, err := reader.ReadString('\n')
-	if err != nil {
-		panic(err)
-	}
+	//reader := bufio.NewReader(os.Stdin)
+	//rawSd, err := reader.ReadString('\n')
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	rawSd := "dj0wCm89cGlvbi13ZWJydGMgNTU5NjM5MDY2NDI5Mjk0NDgyMiAyIElOIElQNCAwLjAuMC4wCnM9LQp0PTAgMAphPWdyb3VwOkJVTkRMRSBkYXRhCmE9bXNpZC1zZW1hbnRpYzogV01TCm09YXBwbGljYXRpb24gOSBEVExTL1NDVFAgNTAwMApjPUlOIElQNCAxMjcuMC4wLjEKYT1zZXR1cDphY3RpdmUKYT1taWQ6ZGF0YQphPWljZS11ZnJhZzpETFRiZFlVUEtqb1hwQWxxCmE9aWNlLXB3ZDpKV2tvRXJIZmxSUEdzS0VJcnFkR2Z1d0V0ZmZIb3FSVgphPWljZS1saXRlCmE9ZmluZ2VycHJpbnQ6c2hhLTI1NiBDNTo5Rjo4MDowOTo0OTozMzpCNDo1RDo2MDpCMjpDMDpBQzoyQTo2MDowMDpFQToxODoyRTo1RDoxODpGNTo3OToxRTo4QzpENzo2ODo4NDpBOTowMTo5Rjo1RDpCMQphPXNjdHBtYXA6NTAwMCB3ZWJydGMtZGF0YWNoYW5uZWwgMTAyNAphPWNhbmRpZGF0ZTp1ZHBjYW5kaWRhdGUgMSB1ZHAgNjI4NzcgMTkyLjE2OC4xLjcwIDU4MjU3IHR5cCBob3N0CmE9ZW5kLW9mLWNhbmRpZGF0ZXMK"
 
 	fmt.Println("")
 	sd, err := base64.StdEncoding.DecodeString(rawSd)
