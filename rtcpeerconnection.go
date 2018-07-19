@@ -68,7 +68,6 @@ type RTCPeerConnection struct {
 	OnICEConnectionStateChange func(iceConnectionState ice.ConnectionState)
 
 	config RTCConfiguration
-	tlscfg *dtls.TLSCfg
 
 	// ICE: TODO: Move to ICEAgent
 	iceAgent           *ice.Agent
@@ -248,4 +247,16 @@ func (r *RTCPeerConnection) dataChannelEventHandler(e network.DataChannelEvent) 
 	default:
 		fmt.Printf("Unhandled DataChannelEvent %v \n", event)
 	}
+}
+
+func (r *RTCPeerConnection) getCertPair() *dtls.CertPair {
+	r.certPairMutex.RLock()
+	defer r.certPairMutex.RUnlock()
+	return r.certPair
+}
+
+func (r *RTCPeerConnection) setCertPair(certPair *dtls.CertPair) {
+	r.certPairMutex.Lock()
+	defer r.certPairMutex.Unlock()
+	r.certPair = certPair
 }
